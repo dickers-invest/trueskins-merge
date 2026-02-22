@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Объединение портфелей TrueSkins</title>
+</head>
+
+<body>
+
+<h2>Объединение портфелей TrueSkins</h2>
+
+<input type="file" id="files" multiple accept=".json"><br><br>
+
+Имя портфеля:
+<input id="name" placeholder="Общий портфель"><br><br>
+
+<button onclick="merge()">Объединить</button>
+
+<script>
+
+async function merge(){
+
+const input = document.getElementById("files");
+
+if(input.files.length < 2){
+
+alert("Нужно минимум 2 файла");
+
+return;
+
+}
+
+let merged=null;
+
+for(const file of input.files){
+
+const text=await file.text();
+
+const data=JSON.parse(text);
+
+if(!merged){
+
+merged=data;
+
+}else{
+
+merged.rows.push(...data.rows);
+
+}
+
+}
+
+const firstZero={};
+
+const remove=[];
+
+merged.rows.forEach((item,i)=>{
+
+let price=parseFloat(item.priceBuy)||0;
+
+if(price===0){
+
+let name=item.name;
+
+let qty=parseInt(item.quantity)||0;
+
+if(firstZero[name]==null){
+
+firstZero[name]=i;
+
+}else{
+
+merged.rows[firstZero[name]].quantity+=qty;
+
+remove.push(i);
+
+}
+
+}
+
+});
+
+remove.reverse().forEach(i=>merged.rows.splice(i,1));
+
+merged.name=document.getElementById("name").value||"merged_portfolio";
+
+const blob=new Blob(
+
+[JSON.stringify(merged,null,2)],
+
+{type:"application/json"}
+
+);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+
+a.download=merged.name+".json";
+
+a.click();
+
+}
+
+</script>
+
+</body>
+</html>
